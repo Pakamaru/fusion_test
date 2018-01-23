@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const auth = require("./auth.json");
+const sql = require("sqlite");
 
 const welcomeID = "402813648164225027";
 const rankID = "403136969787572224";
@@ -12,6 +13,7 @@ const ranks = ["I","II","III","IV","V"];
 const regions = ["euw","eune","na","ru","lan","las","br","oce","tr","jp","kr","cn"];
 const roles  = ["adc","support","mid","jungle","top"];
 
+sql.open("./scores.sqlite");
 
 client.on("ready", () => {
   client.user.setGame("teemo");
@@ -24,6 +26,39 @@ client.on("guildMemberAdd", (member) => {
 client.on("message", (message) => {
 
   if(message.author.bot) return ;
+
+  sql.get(`SELECT * FROM scores WHERE userId = "${message.author.id}"`).then(row => {
+    if(!row){
+      sql.run("INSERT INTO scores (userId, points, level) VALUES (?, ?, ?)", [message.author.id, 1, 0]);
+
+    } else {
+      let curLevel = Math.Floor(0.15 * Math.sqrt(row.points + 1));
+      if(curLevel > row.level){
+        row.level = curLevel;
+        sql.run(`UPDATE scores SET level = ${row.level} where userId = "${message.author.id}"`);
+        message.reply("congratulations! You have leveled up to level ${row.level}"!);
+        switch (${row.level}) {
+          case 5:
+            break;
+          case 10:
+            break;
+          case 15:
+            break;
+          case 20:
+            break;
+          case 25:
+            break;
+          default:
+        }
+      }
+      sql.run(`UPDATE scores SET points = ${row.points + 1} where userId = "${message.author.id}"`);
+    }
+  }).catch(() => {
+    console.error;
+    sql.run("CREATE TABLE IF NOT EXISTS scores (userId TEXT, points INTEGER, level INTEGER)").then(() => {
+      sql.run("INSERT INTO scores (userId, points, level) VALUES (?, ?, ?)", [message.author.id, 1, 0]);
+    });
+  });
 
   const rawArgs = message.content.split(/ +/g); //returns an array
   if(message.channel.id === rankID) setRank_(message, rawArgs);
@@ -45,24 +80,30 @@ client.on("message", (message) => {
 });
 client.login(auth.token);
 
-function accept_(m){
-  let member = m.guild.member(m.author);
-  let role = m.guild.roles.find("name", "member");
-  member.addRole(role);
+function addRole_(m, r){
+  let member = m.member;
+  let role[];
+  for(var i=0; i<r.length){
+    role[i] = m.guild.roles.find("name", r[i]);
+  }
+  member.addRoles(role);
   return m.delete();
 }
+
+function accept_(m){
+  addRole_(m, ["member"]);
+}
 function setRank_(m, a){
-  let member = m.guild.member(m.author);
   if(m.content.indexOf(auth.prefix) === 0) removeRank_(member);
   else{
-    try{
-      let role = [m.guild.roles.find("name", a[0].toLowerCase()), m.guild.roles.find("name", a[1].toUpperCase())];
-      member.addRoles(role);
-    }catch(err){
-      console.log(err);
+    if(!a[0] || !a[1]){
+      try(
+        addRole_(m, a);
+      ).catch(err){
+        console.log(err);
+      }
     }
   }
-return m.delete();
 }
 function removeRank_(member){
   for(var i=0; i<member.roles.array().length; i++){
@@ -79,17 +120,14 @@ function removeRank_(member){
   }
 }
 function setRegion_(m, a){
-  let member = m.guild.member(m.author);
   if(m.content.indexOf(auth.prefix) === 0) removeRegion_(member);
   else{
     try{
-      let role = m.guild.roles.find("name", a[0].toLowerCase());
-      member.addRole(role);
+      addRole_(m, [a]);
     }catch(err){
       console.log(err);
     }
   }
-  return m.delete();
 }
 function removeRegion_(member){
   for(var i=0; i<member.roles.array().length; i++){
@@ -101,19 +139,16 @@ function removeRegion_(member){
   }
 }
 function setRoles_(m, a){
-  let member = m.guild.member(m.author);
   if(m.content.indexOf(auth.prefix) === 0) RemoveRole_(member);
   else{
     for(var i=0; i<a.length; i++){
       try{
-        let role = m.guild.roles.find("name", a[0].toLowerCase());
+        addRole_(m, a);
       }catch(err){
         console.log(err);
       }
-      member.addRole(role)
     }
   }
-  return m.delete();
 }
 function RemoveRole_(member){
   for(var i=0; i<member.roles.array().length; i++){
