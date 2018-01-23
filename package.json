@@ -1,0 +1,23 @@
+{
+  "name": "discord.js",
+  "version": "1.0.0",
+  "description": "\"# fusion-bot\""
+  },
+  "dependencies": {
+    "discord.js": "^11.2.1",
+    "sqlite": "^2.9.0"
+  },
+  "devDependencies": {},
+  "__comment": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pakamaru/Submission-Bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Pakamaru/Submission-Bot/issues"
+  },
+  "homepage": "https://github.com/Pakamaru/Submission-Bot#readme"
+}
